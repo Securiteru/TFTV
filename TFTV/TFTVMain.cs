@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using TFTV;
 
 namespace TFTV
 {
@@ -155,6 +156,14 @@ namespace TFTV
                 harmony.PatchAll();
                 TFTVVanillaFixes.UI.FixSurveillanceAbilityGroundMarker(harmony);
 
+                // Initialize RetrievableItems mod logic
+                new RetrievableItems().Initialize();
+
+                // Initialize UnlimitedDeploy mod logic
+                new UnlimitedDeploy().Initialize();
+
+                // Initialize TacticalWeapons mod logic
+                new TacticalWeapons().Initialize();
 
                 if (GameUtl.CurrentLevel() != null && GameUtl.CurrentLevel().GetComponent<HomeScreenView>() != null)
                 {

@@ -1,4 +1,4 @@
-﻿using Base;
+using Base;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -155,20 +155,21 @@ namespace PRMBetterClasses
                                 return (perk: default, spCost: default);
                             }
                         case PerkType.Faction_1:
-                        //if (faction != null
-                        //    && RelatedFixedPerks != null
-                        //    && RelatedFixedPerks.Count > 0
-                        //    && RelatedFixedPerks.ContainsKey(ClassKeys.AllClasses.Name)
-                        //    && RelatedFixedPerks[ClassKeys.AllClasses.Name] is Dictionary<string, string> factionDict
-                        //    && factionDict.ContainsKey(faction))
-                        //{
-                        //    abilityName = factionDict[faction];
-                        //}
-                        //else
-                        //{
-                        //    abilityName = RelatedFixedPerks[ClassKeys.AllClasses.Name][FactionKeys.PX];
-                        //}
-                        //return (perk: Helper.AbilityNameToDefMap[abilityName], spCost: SPcost);
+                            if (faction != null
+                                && className != null
+                                && RelatedFixedPerks != null
+                                && RelatedFixedPerks.Count > 0
+                                && RelatedFixedPerks is Dictionary<string, Dictionary<string, string>> factionClassDict1
+                                && factionClassDict1.ContainsKey(faction)
+                                && factionClassDict1[faction].ContainsKey(className))
+                            {
+                                abilityName = factionClassDict1[faction][className];
+                            }
+                            else
+                            {
+                                abilityName = RelatedFixedPerks[FactionKeys.PX][className];
+                            }
+                            return (perk: Helper.AbilityNameToDefMap[abilityName], spCost: SPcost);
                         case PerkType.Faction_2:
                             if (faction != null
                                 && className != null
@@ -195,19 +196,75 @@ namespace PRMBetterClasses
                     int safeguard = 0;
                     bool usedFound;
                     bool proficienyAlreadySet = false;
+
+                    // Case 1: simple unrelated RNG pool (NoKey/NoKey)
                     if (UnrelatedRandomPerks != null)
                     {
                         do
                         {
                             abilityName = UnrelatedRandomPerks.GetRandomElement(rnd);
-                            usedFound = exclusionList.Contains(abilityName);
+                            usedFound = exclusionList != null && exclusionList.Contains(abilityName);
                             proficienyAlreadySet = config.RadomSkillExclusionMap.ContainsKey(abilityName)
                                                    && config.RadomSkillExclusionMap[abilityName].Contains(className);
+                            bool mappingMissing = abilityName == null || !Helper.AbilityNameToDefMap.ContainsKey(abilityName);
                             safeguard++;
-                        } while ((usedFound || proficienyAlreadySet) && safeguard <= UnrelatedRandomPerks.Count * 2);
-                        exclusionList.Add(abilityName);
+                            if (mappingMissing) { usedFound = true; }
+                        } while ((usedFound || proficienyAlreadySet) && safeguard <= Math.Max(1, UnrelatedRandomPerks.Count) * 3);
+                        if (exclusionList != null && abilityName != null) exclusionList.Add(abilityName);
+                    }
+                    // Case 2: class/faction-aware RNG pools
+                    else if (PerkDictionary != null && PerkDictionary.Count > 0)
+                    {
+                        // choose outer scope: prefer exact faction, then All, then any available
+                        Dictionary<string, List<string>> outer = null;
+                        if (!string.IsNullOrEmpty(faction) && PerkDictionary.ContainsKey(faction))
+                        {
+                            outer = PerkDictionary[faction];
+                        }
+                        else if (PerkDictionary.ContainsKey(FactionKeys.All))
+                        {
+                            outer = PerkDictionary[FactionKeys.All];
+                        }
+                        else
+                        {
+                            outer = PerkDictionary.First().Value;
+                        }
+
+                        // choose inner pool: prefer exact class, then All Classes, else flatten
+                        List<string> candidatePool = null;
+                        if (outer != null)
+                        {
+                            if (!string.IsNullOrEmpty(className) && outer.ContainsKey(className))
+                            {
+                                candidatePool = outer[className];
+                            }
+                            else if (outer.ContainsKey(ClassKeys.AllClasses.Name))
+                            {
+                                candidatePool = outer[ClassKeys.AllClasses.Name];
+                            }
+                            else if (outer.Count > 0)
+                            {
+                                candidatePool = outer.Values.SelectMany(v => v).ToList();
+                            }
+                        }
+
+                        if (candidatePool != null && candidatePool.Count > 0)
+                        {
+                            do
+                            {
+                                abilityName = candidatePool.GetRandomElement(rnd);
+                                usedFound = exclusionList != null && exclusionList.Contains(abilityName);
+                                proficienyAlreadySet = config.RadomSkillExclusionMap.ContainsKey(abilityName)
+                                                       && config.RadomSkillExclusionMap[abilityName].Contains(className);
+                                bool mappingMissing = abilityName == null || !Helper.AbilityNameToDefMap.ContainsKey(abilityName);
+                                safeguard++;
+                                if (mappingMissing) { usedFound = true; }
+                            } while ((usedFound || proficienyAlreadySet) && safeguard <= Math.Max(1, candidatePool.Count) * 3);
+                            if (exclusionList != null && abilityName != null) exclusionList.Add(abilityName);
+                        }
                     }
                 }
+
                 return abilityName != null && Helper.AbilityNameToDefMap.ContainsKey(abilityName)
                     ? (perk: Helper.AbilityNameToDefMap[abilityName], spCost: SPcost)
                     : (perk: default, spCost: default);

@@ -1,4 +1,4 @@
-﻿using Base.Defs;
+using Base.Defs;
 using HarmonyLib;
 using I2.Loc;
 using Newtonsoft.Json;
@@ -52,6 +52,23 @@ namespace PRMBetterClasses
                 //}
                 AbilityNameToDefMap = ReadJson<Dictionary<string, string>>(AbilitiesJsonFileName);
                 NotLocalizedTextMap = ReadJson<Dictionary<string, Dictionary<string, string>>>(TextMapFileName);
+
+                // Ensure new custom abilities are registered even if JSON is not yet updated
+                if (AbilityNameToDefMap != null)
+                {
+                    if (!AbilityNameToDefMap.ContainsKey("ENTRENCH"))
+                    {
+                        AbilityNameToDefMap["ENTRENCH"] = "Entrench_AbilityDef";
+                    }
+                    if (!AbilityNameToDefMap.ContainsKey("SUPPRESSION"))
+                    {
+                        AbilityNameToDefMap["SUPPRESSION"] = "Suppression_AbilityDef";
+                    }
+                    if (!AbilityNameToDefMap.ContainsKey("VEIL OF SHADOWS"))
+                    {
+                        AbilityNameToDefMap["VEIL OF SHADOWS"] = "VeilOfShadows_AbilityDef";
+                    }
+                }
             }
             catch (Exception e)
             {

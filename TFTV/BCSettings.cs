@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace PRMBetterClasses
 {
@@ -156,142 +156,100 @@ namespace PRMBetterClasses
                 }),
             new PersonalPerksDef(
                 perkKey: PerkType.Class_1,
-                isRandom: false,
+                isRandom: true,
                 spCost: 20,
-                relList: new Dictionary<string, Dictionary<string, string>>
-                {{ FactionKeys.All, new Dictionary<string,string> {
-                    { ClassKeys.Assault.Name, "QUARTERBACK" },
-                    { ClassKeys.Heavy.Name, "JETPACK CONTROL" }, // JETPACK CONTROL
-                    { ClassKeys.Sniper.Name, "GUNSLINGER" },
-                    { ClassKeys.Berserker.Name, "GUN KATA" },
-                    { ClassKeys.Priest.Name, "BIOCHEMIST" },
-                    { ClassKeys.Technician.Name, "REMOTE DEPLOYMENT" },
-                    { ClassKeys.Infiltrator.Name, "VANISH" } // VANISH ex PHANTOM PROTOCOL
+                perkDict: new Dictionary<string, Dictionary<string, List<string>>>
+                {{ FactionKeys.All, new Dictionary<string, List<string>> {
+                    { ClassKeys.Assault.Name, new List<string> { "QUARTERBACK", "KILL'N'RUN" } },
+                    { ClassKeys.Heavy.Name, new List<string> { "JETPACK CONTROL", "HUNKER DOWN", "SHRED RESISTANCE", "ENTRENCH" } },
+                    { ClassKeys.Sniper.Name, new List<string> { "GUNSLINGER", "KILL ZONE" } },
+                    { ClassKeys.Berserker.Name, new List<string> { "GUN KATA", "EXERTION", "KILLER INSTINCT" } },
+                    { ClassKeys.Priest.Name, new List<string> { "BIOCHEMIST", "LAY WASTE" } },
+                    { ClassKeys.Technician.Name, new List<string> { "REMOTE DEPLOYMENT", "STABILITY", "AMPLIFY PAIN" } },
+                    { ClassKeys.Infiltrator.Name, new List<string> { "VANISH", "NEURAL FEEDBACK", "JAMMING FIELD", "PARAPSYCHOSIS" } }
                 } } }),
             new PersonalPerksDef(
                 perkKey: PerkType.Class_2,
-                isRandom: false,
+                isRandom: true,
                 spCost: 20,
-                relList: new Dictionary<string, Dictionary<string, string>>
-                {{ FactionKeys.All, new Dictionary<string,string> {
-                    { ClassKeys.Assault.Name, "AIMED BURST" },
-                    { ClassKeys.Heavy.Name, "BOOM BLAST" },
-                    { ClassKeys.Sniper.Name, "KILL ZONE" },
-                    { ClassKeys.Berserker.Name, "KILLER INSTINCT" }, // KILLER INSTINCT ex EXERTION
-                    { ClassKeys.Priest.Name, "LAY WASTE" },
-                    { ClassKeys.Technician.Name, "REMOTE CONTROL" },
-                    { ClassKeys.Infiltrator.Name, "SPIDER DRONE PACK" }
+                perkDict: new Dictionary<string, Dictionary<string, List<string>>>
+                {{ FactionKeys.All, new Dictionary<string, List<string>> {
+                    { ClassKeys.Assault.Name, new List<string> { "AIMED BURST", "KILL'N'RUN", "SUPPRESSION" } },
+                    { ClassKeys.Heavy.Name, new List<string> { "BOOM BLAST", "SKIRMISHER", "HUNKER DOWN", "ENTRENCH" } },
+                    { ClassKeys.Sniper.Name, new List<string> { "KILL ZONE", "GUNSLINGER" } },
+                    { ClassKeys.Berserker.Name, new List<string> { "KILLER INSTINCT", "GUN KATA" } },
+                    { ClassKeys.Priest.Name, new List<string> { "LAY WASTE", "BIOCHEMIST" } },
+                    { ClassKeys.Technician.Name, new List<string> { "REMOTE CONTROL", "STABILITY", "AMPLIFY PAIN" } },
+                    { ClassKeys.Infiltrator.Name, new List<string> { "SPIDER DRONE PACK", "PARAPSYCHOSIS", "VANISH", "VEIL OF SHADOWS" } }
                 } } }),
             new PersonalPerksDef(
                 perkKey: PerkType.Faction_1,
-                isRandom: false,
+                isRandom: true,
                 spCost: 15,
-                relList: new Dictionary<string, Dictionary<string, string>>
+                perkDict: new Dictionary<string, Dictionary<string, List<string>>>
                 {
-                    { FactionKeys.PX, new Dictionary<string, string>
+                    { FactionKeys.PX, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "DIE HARD" }, //DIE HARD ex OVERWATCH FOCUS
-                        { ClassKeys.Heavy.Name, "DIE HARD" },
-                        { ClassKeys.Sniper.Name, "DIE HARD" },
-                        { ClassKeys.Berserker.Name, "DIE HARD" },
-                        { ClassKeys.Priest.Name, "DIE HARD" },
-                        { ClassKeys.Technician.Name, "DIE HARD" },
-                        { ClassKeys.Infiltrator.Name, "DIE HARD" }
+                        { ClassKeys.AllClasses.Name, new List<string> { "DIE HARD", "OVERWATCH FOCUS", "TAKEDOWN" } }
                     } },
-                    { FactionKeys.Anu, new Dictionary<string, string>
+                    { FactionKeys.Anu, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "BREATHE MIST" },
-                        { ClassKeys.Berserker.Name, "BREATHE MIST" },
-                        { ClassKeys.Priest.Name, "BREATHE MIST" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "BREATHE MIST" } }
                     } },
-                    { FactionKeys.NJ, new Dictionary<string, string>
+                    { FactionKeys.NJ, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "TAKEDOWN" },
-                        { ClassKeys.Heavy.Name, "TAKEDOWN" },
-                        { ClassKeys.Sniper.Name, "TAKEDOWN" },
-                        { ClassKeys.Technician.Name, "TAKEDOWN" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "TAKEDOWN" } }
                     } },
-                    { FactionKeys.Syn, new Dictionary<string, string>
+                    { FactionKeys.Syn, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "OVERWATCH FOCUS" }, // ex PAIN CHAMELEON
-                        { ClassKeys.Sniper.Name, "OVERWATCH FOCUS" },
-                        { ClassKeys.Infiltrator.Name, "OVERWATCH FOCUS" }
+                        { ClassKeys.AllClasses.Name, new List<string> { "OVERWATCH FOCUS", "ENDURANCE" } }
                     } },
-                    { FactionKeys.IN, new Dictionary<string, string>
+                    { FactionKeys.IN, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "BREATHE MIST" },
-                        { ClassKeys.Heavy.Name, "TAKEDOWN" },
-                        { ClassKeys.Sniper.Name, "OVERWATCH FOCUS" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "BREATHE MIST", "TAKEDOWN", "OVERWATCH FOCUS" } }
                     } },
-                    { FactionKeys.PU, new Dictionary<string, string>
+                    { FactionKeys.PU, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "TAKEDOWN" },
-                        { ClassKeys.Heavy.Name, "TAKEDOWN" },
-                        { ClassKeys.Sniper.Name, "TAKEDOWN" },
-                        { ClassKeys.Technician.Name, "TAKEDOWN" },
-                        { ClassKeys.Infiltrator.Name, "TAKEDOWN" }
+                        { ClassKeys.AllClasses.Name, new List<string> { "PUNISHER", "AR TARGETING", "TAKEDOWN" } }
                     } },
-                    { FactionKeys.FS, new Dictionary<string, string>
+                    { FactionKeys.FS, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "BREATHE MIST" },
-                        { ClassKeys.Berserker.Name, "BREATHE MIST" },
-                        { ClassKeys.Priest.Name, "BREATHE MIST" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "BREATHE MIST", "SOWER OF CHANGE" } }
                     } },
                 }),
             new PersonalPerksDef(
                 perkKey: PerkType.Faction_2,
-                isRandom: false,
+                isRandom: true,
                 spCost: 20,
-                relList: new Dictionary<string, Dictionary<string, string>>
+                perkDict: new Dictionary<string, Dictionary<string, List<string>>>
                 {
-                    { FactionKeys.PX, new Dictionary<string, string>
+                    { FactionKeys.PX, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "BATTLE HARDENED" },
-                        { ClassKeys.Heavy.Name, "BATTLE HARDENED" },
-                        { ClassKeys.Sniper.Name, "BATTLE HARDENED" },
-                        { ClassKeys.Berserker.Name, "BATTLE HARDENED" },
-                        { ClassKeys.Priest.Name, "BATTLE HARDENED" },
-                        { ClassKeys.Technician.Name, "BATTLE HARDENED" },
-                        { ClassKeys.Infiltrator.Name, "BATTLE HARDENED" }
+                        { ClassKeys.AllClasses.Name, new List<string> { "BATTLE HARDENED" } }
                     } },
-                    { FactionKeys.Anu, new Dictionary<string, string>
+                    { FactionKeys.Anu, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "SOWER OF CHANGE" },
-                        { ClassKeys.Berserker.Name, "SOWER OF CHANGE" },
-                        { ClassKeys.Priest.Name, "RESURRECT" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "SOWER OF CHANGE", "RESURRECT" } }
                     } },
-                    { FactionKeys.NJ, new Dictionary<string, string>
+                    { FactionKeys.NJ, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "PUNISHER" },
-                        { ClassKeys.Heavy.Name, "PUNISHER" },
-                        { ClassKeys.Sniper.Name, "PUNISHER" },
-                        { ClassKeys.Technician.Name, "AR TARGETING" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "PUNISHER", "AR TARGETING" } }
                     } },
-                    { FactionKeys.Syn, new Dictionary<string, string>
+                    { FactionKeys.Syn, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "ENDURANCE" },
-                        { ClassKeys.Sniper.Name, "ENDURANCE" },
-                        { ClassKeys.Infiltrator.Name, "SABOTEUR" }
+                        { ClassKeys.AllClasses.Name, new List<string> { "ENDURANCE", "SABOTEUR" } }
                     } },
-                    { FactionKeys.IN, new Dictionary<string, string>
+                    { FactionKeys.IN, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "SOWER OF CHANGE" },
-                        { ClassKeys.Heavy.Name, "PUNISHER" },
-                        { ClassKeys.Sniper.Name, "ENDURANCE" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "SOWER OF CHANGE", "PUNISHER", "ENDURANCE" } }
                     } },
-                    { FactionKeys.PU, new Dictionary<string, string>
+                    { FactionKeys.PU, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "PUNISHER" },
-                        { ClassKeys.Heavy.Name, "PUNISHER" },
-                        { ClassKeys.Sniper.Name, "PUNISHER" },
-                        { ClassKeys.Technician.Name, "PUNISHER" },
-                        { ClassKeys.Infiltrator.Name, "PUNISHER" }
+                        { ClassKeys.AllClasses.Name, new List<string> { "PUNISHER", "AR TARGETING" } }
                     } },
-                    { FactionKeys.FS, new Dictionary<string, string>
+                    { FactionKeys.FS, new Dictionary<string, List<string>>
                     {
-                        { ClassKeys.Assault.Name, "SOWER OF CHANGE" },
-                        { ClassKeys.Berserker.Name, "SOWER OF CHANGE" },
-                        { ClassKeys.Priest.Name, "SOWER OF CHANGE" },
+                        { ClassKeys.AllClasses.Name, new List<string> { "SOWER OF CHANGE" } }
                     } },
                 })
         };

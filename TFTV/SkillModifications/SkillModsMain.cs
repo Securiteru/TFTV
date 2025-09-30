@@ -1,4 +1,4 @@
-﻿using Base.Defs;
+using Base.Defs;
 using Base.Entities.Abilities;
 using Base.Entities.Effects;
 using Base.Entities.Effects.ApplicationConditions;
@@ -84,10 +84,139 @@ namespace PRMBetterClasses.SkillModifications
                 // BattleFocus, currently used as placeholder, will go to Vengeance Torso
                 Create_BattleFocus();
 
+                // New custom abilities
+                Create_Entrench();
+                Create_Suppression();
+                Create_VeilOfShadows();
+                Create_ExtendedWatch();
+                Create_SuppressiveBarrage();
+
                 // Set SP for all skills according to where they are set
                 Set_SPcost();
             }
-            catch (Exception e)
+
+        // Extended Watch: Overwatch costs 0 AP for 1 turn; helps chaining OW across rounds
+        public static void Create_ExtendedWatch()
+        {
+            try
+            {
+                string skillName = "ExtendedWatch_AbilityDef";
+                DefCache DefCache = TFTVMain.Main.DefCache;
+
+                // Prepare a dedicated tag and attach it to Overwatch ability
+                SkillTagDef baseTag = DefCache.GetDef<SkillTagDef>("AttackAbility_SkillTagDef");
+                SkillTagDef owTag = Helper.CreateDefFromClone(
+                    baseTag,
+                    "4a9b9a5d-8f0a-4a75-8dbe-95d4dbb3f97a",
+                    "ExtendedWatch_Overwatch_SkillTagDef");
+                TacticalAbilityDef overwatchAD = DefCache.GetDef<TacticalAbilityDef>("Overwatch_AbilityDef");
+                if (overwatchAD != null && !overwatchAD.SkillTags.Contains(owTag))
+                {
+                    overwatchAD.SkillTags = overwatchAD.SkillTags.AddToArray(owTag);
+                }
+
+                // Ability shell
+                ApplyStatusAbilityDef source = DefCache.GetDef<ApplyStatusAbilityDef>("QuickAim_AbilityDef");
+                ApplyStatusAbilityDef extWatch = Helper.CreateDefFromClone(
+                    source,
+                    "f8f5bcb7-8b62-462e-9d3c-c501b1b8b1bc",
+                    skillName);
+                extWatch.CharacterProgressionData = Helper.CreateDefFromClone(
+                    source.CharacterProgressionData,
+                    "d5bbadf9-a2f6-4ef3-9c9e-ef5f1a4f437b",
+                    skillName);
+                extWatch.ViewElementDef = Helper.CreateDefFromClone(
+                    source.ViewElementDef,
+                    "d0b5a3b2-3235-4b3e-8a63-9d335e3b5c0f",
+                    skillName);
+
+                // Cost modifier targeting Overwatch via tag
+                ChangeAbilitiesCostStatusDef owCost = Helper.CreateDefFromClone(
+                    DefCache.GetDef<ChangeAbilitiesCostStatusDef>("E_AbilityCostModifier [QuickAim_AbilityDef]"),
+                    "c0ad8e15-1a0f-4d3e-9a38-8e42f2d1a6a5",
+                    $"E_OverwatchCostModifier [{skillName}]");
+                owCost.Visuals = extWatch.ViewElementDef;
+                owCost.DurationTurns = 2; // make it persist for two rounds
+                owCost.ExpireOnEndOfTurn = false;
+                owCost.SingleInstance = false;
+                owCost.AbilityCostModification.TargetAbilityTagDef = owTag;
+                owCost.AbilityCostModification.SkillTagCullFilter = null;
+                owCost.AbilityCostModification.EquipmentTagDef = null;
+                owCost.AbilityCostModification.AbilityCullFilter = null;
+                owCost.AbilityCostModification.ActionPointModType = TacticalAbilityModificationType.Multiply;
+                owCost.AbilityCostModification.ActionPointMod = 0f; // free OW
+
+                // Wire
+                extWatch.StatusDef = owCost;
+                extWatch.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_EXTENDED_WATCH";
+                extWatch.ViewElementDef.Description.LocalizationKey = "PR_BC_EXTENDED_WATCH_DESC";
+                Sprite icon = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_EquipmentAbility_OverwatchFocus-2.png");
+                extWatch.ViewElementDef.LargeIcon = icon;
+                extWatch.ViewElementDef.SmallIcon = icon;
+                extWatch.ActionPointCost = 0.5f;
+                extWatch.WillPointCost = 2.0f;
+            }
+            catch (System.Exception e)
+            {
+                PRMLogger.Error(e);
+            }
+        }
+
+        // Suppressive Barrage (Heavy): AoE debuff (Speed, Accuracy) to enemies in radius
+        public static void Create_SuppressiveBarrage()
+        {
+            try
+            {
+                string skillName = "SuppressiveBarrage_AbilityDef";
+                DefCache DefCache = TFTVMain.Main.DefCache;
+
+                // Base AoE from Psychic Scream
+                ApplyStatusAbilityDef source = DefCache.GetDef<ApplyStatusAbilityDef>("Priest_PsychicScream_AbilityDef");
+                ApplyStatusAbilityDef sup = Helper.CreateDefFromClone(
+                    source,
+                    "6ae5bd2d-2a64-47f5-9c1a-84bf0f2a5a9d",
+                    skillName);
+                sup.CharacterProgressionData = Helper.CreateDefFromClone(
+                    source.CharacterProgressionData,
+                    "c2d5d4b6-4ba8-4c14-8b0a-9339eae4b6a4",
+                    skillName);
+                sup.ViewElementDef = Helper.CreateDefFromClone(
+                    source.ViewElementDef,
+                    "a77c24d8-4a2a-4c9a-9f3f-8c9e3e7f8b3e",
+                    skillName);
+
+                // Debuff status applied to enemies
+                StanceStatusDef pinned = Helper.CreateDefFromClone(
+                    DefCache.GetDef<StanceStatusDef>("E_SneakAttackStatus [SneakAttack_AbilityDef]"),
+                    "f0d41d39-1f74-43a4-bc42-5f0d2b0f9e9d",
+                    $"E_SuppressiveDebuff [{skillName}]");
+                pinned.Visuals = Helper.CreateDefFromClone(
+                    sup.ViewElementDef,
+                    "ed2a3f19-93a7-4db1-9404-50e39a6a3f66",
+                    $"E_View [E_SuppressiveDebuff [{skillName}]]");
+                pinned.Visuals.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSIVE_BARRAGE_STATUS";
+                pinned.Visuals.Description.LocalizationKey = "PR_BC_SUPPRESSIVE_BARRAGE_STATUS_DESC";
+                pinned.DurationTurns = 1;
+                pinned.SingleInstance = true;
+                pinned.StatModifications = new ItemStatModification[]
+                {
+                    new ItemStatModification { TargetStat = StatModificationTarget.Speed, Modification = StatModificationType.Add, Value = -2 },
+                    new ItemStatModification { TargetStat = StatModificationTarget.Accuracy, Modification = StatModificationType.Add, Value = -0.2f },
+                };
+
+                // Wire
+                sup.StatusDef = pinned;
+                sup.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSIVE_BARRAGE";
+                sup.ViewElementDef.Description.LocalizationKey = "PR_BC_SUPPRESSIVE_BARRAGE_DESC";
+                Sprite icon = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_PersonalTrack_TacticalAnalyst.png");
+                sup.ViewElementDef.LargeIcon = icon;
+                sup.ViewElementDef.SmallIcon = icon;
+                sup.ActionPointCost = 1.0f;
+                sup.WillPointCost = 3.0f;
+                // Range/area (reuse scream radius)
+                sup.TargetingDataDef.Origin.Range = source.TargetingDataDef.Origin.Range + 2f; // slightly larger
+            }
+            catch (System.Exception e)
             {
                 PRMLogger.Error(e);
             }
@@ -322,14 +451,18 @@ namespace PRMBetterClasses.SkillModifications
                 {
                     case PerkType.Background:
                     case PerkType.Proficiency:
-                        foreach (string skillName in ppd.UnrelatedRandomPerks)
+                        if (ppd.UnrelatedRandomPerks != null)
                         {
-                            abilityName = Helper.AbilityNameToDefMap[skillName];
-                            TacticalAbilityDef tacticalAbility = DefCache.GetDef<TacticalAbilityDef>(abilityName);
-                            if (tacticalAbility != null && tacticalAbility.CharacterProgressionData != null)
+                            foreach (string skillName in ppd.UnrelatedRandomPerks)
                             {
-                                tacticalAbility.CharacterProgressionData.SkillPointCost = ppd.SPcost;
-                                PRMLogger.Debug($"Set ability {tacticalAbility.name} to {ppd.SPcost} SP cost.");
+                                if (!Helper.AbilityNameToDefMap.ContainsKey(skillName)) continue;
+                                abilityName = Helper.AbilityNameToDefMap[skillName];
+                                TacticalAbilityDef tacticalAbility = DefCache.GetDef<TacticalAbilityDef>(abilityName);
+                                if (tacticalAbility != null && tacticalAbility.CharacterProgressionData != null)
+                                {
+                                    tacticalAbility.CharacterProgressionData.SkillPointCost = ppd.SPcost;
+                                    PRMLogger.Debug($"Set ability {tacticalAbility.name} to {ppd.SPcost} SP cost.");
+                                }
                             }
                         }
                         break;
@@ -337,16 +470,45 @@ namespace PRMBetterClasses.SkillModifications
                     case PerkType.Class_2:
                     case PerkType.Faction_1:
                     case PerkType.Faction_2:
-                        foreach (KeyValuePair<string, Dictionary<string, string>> outerRelation in ppd.RelatedFixedPerks)
+                        // Handle fixed mappings if present
+                        if (ppd.RelatedFixedPerks != null)
                         {
-                            foreach (KeyValuePair<string, string> innerRelation in outerRelation.Value)
+                            foreach (KeyValuePair<string, Dictionary<string, string>> outerRelation in ppd.RelatedFixedPerks)
                             {
-                                abilityName = Helper.AbilityNameToDefMap[innerRelation.Value];
-                                TacticalAbilityDef tacticalAbility = DefCache.GetDef<TacticalAbilityDef>(abilityName);
-                                if (tacticalAbility != null && tacticalAbility.CharacterProgressionData != null)
+                                foreach (KeyValuePair<string, string> innerRelation in outerRelation.Value)
                                 {
-                                    tacticalAbility.CharacterProgressionData.SkillPointCost = ppd.SPcost;
-                                    PRMLogger.Debug($"Set ability {tacticalAbility.name} to {ppd.SPcost} SP cost.");
+                                    if (!Helper.AbilityNameToDefMap.ContainsKey(innerRelation.Value)) continue;
+                                    abilityName = Helper.AbilityNameToDefMap[innerRelation.Value];
+                                    TacticalAbilityDef tacticalAbility = DefCache.GetDef<TacticalAbilityDef>(abilityName);
+                                    if (tacticalAbility != null && tacticalAbility.CharacterProgressionData != null)
+                                    {
+                                        tacticalAbility.CharacterProgressionData.SkillPointCost = ppd.SPcost;
+                                        PRMLogger.Debug($"Set ability {tacticalAbility.name} to {ppd.SPcost} SP cost.");
+                                    }
+                                }
+                            }
+                        }
+                        // Handle RNG pools in PerkDictionary (class/faction aware)
+                        else if (ppd.PerkDictionary != null)
+                        {
+                            HashSet<string> uniqueNames = new HashSet<string>();
+                            foreach (KeyValuePair<string, Dictionary<string, List<string>>> outer in ppd.PerkDictionary)
+                            {
+                                foreach (KeyValuePair<string, List<string>> inner in outer.Value)
+                                {
+                                    foreach (string dispName in inner.Value)
+                                    {
+                                        if (string.IsNullOrEmpty(dispName)) continue;
+                                        if (!Helper.AbilityNameToDefMap.ContainsKey(dispName)) continue;
+                                        if (!uniqueNames.Add(dispName)) continue;
+                                        abilityName = Helper.AbilityNameToDefMap[dispName];
+                                        TacticalAbilityDef tacticalAbility = DefCache.GetDef<TacticalAbilityDef>(abilityName);
+                                        if (tacticalAbility != null && tacticalAbility.CharacterProgressionData != null)
+                                        {
+                                            tacticalAbility.CharacterProgressionData.SkillPointCost = ppd.SPcost;
+                                            PRMLogger.Debug($"Set ability {tacticalAbility.name} to {ppd.SPcost} SP cost.");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -463,6 +625,270 @@ namespace PRMBetterClasses.SkillModifications
             stanceStatus.StatModifications[0].Value = damageMod;
             visibleActorsInRangeEffectCondition.TargetingData = battleFocusAbility.TargetingDataDef;
             visibleActorsInRangeEffectCondition.ActorsInRange = true;
+        }
+
+        // New Entrench ability: self-buff armor + accuracy for 1 turn
+        public static void Create_Entrench()
+        {
+            try
+            {
+                string skillName = "Entrench_AbilityDef";
+                DefCache DefCache = TFTVMain.Main.DefCache;
+
+                // Base sources
+                ApplyStatusAbilityDef source = DefCache.GetDef<ApplyStatusAbilityDef>("CloseQuarters_AbilityDef");
+                ApplyStatusAbilityDef quickAim = DefCache.GetDef<ApplyStatusAbilityDef>("QuickAim_AbilityDef");
+
+                // Ability shell
+                ApplyStatusAbilityDef entrench = Helper.CreateDefFromClone(
+                    source,
+                    "8f7d6ad1-3e9e-4e4e-98a8-1c0e4f67b901",
+                    skillName);
+                entrench.CharacterProgressionData = Helper.CreateDefFromClone(
+                    source.CharacterProgressionData,
+                    "6a1c4b2e-8bfe-4dbe-8b99-2b1fa51f2722",
+                    skillName);
+                entrench.TargetingDataDef = quickAim.TargetingDataDef; // self
+                entrench.ViewElementDef = Helper.CreateDefFromClone(
+                    source.ViewElementDef,
+                    "a3fb0d3e-5bdf-4d61-9a0e-8a5d61ed0a6a",
+                    skillName);
+
+                // Armor buff (+10) using ItemSlotStatsModifyStatusDef from Electric Reinforcement
+                ItemSlotStatsModifyStatusDef armorBuff = Helper.CreateDefFromClone(
+                    DefCache.GetDef<ItemSlotStatsModifyStatusDef>("E_Status [ElectricReinforcement_AbilityDef]"),
+                    "7bf7b0c1-2c89-4f99-a6a9-6b6b5c5e6d31",
+                    "E_ArmourModifier [Entrench_AbilityDef]");
+                armorBuff.Visuals = Helper.CreateDefFromClone(
+                    entrench.ViewElementDef,
+                    "31b16147-2f6d-4a87-b2c7-8ad78d44c7d8",
+                    "E_Visuals_ArmourModifier [Entrench_AbilityDef]");
+                armorBuff.Visuals.DisplayName1.LocalizationKey = "PR_BC_ENTRENCH_ARMOR_STATUS";
+                armorBuff.Visuals.Description.LocalizationKey = "PR_BC_ENTRENCH_ARMOR_STATUS_DESC";
+                armorBuff.StatsModifications = new ItemSlotStatsModifyStatusDef.ItemSlotModification[]
+                {
+                    new ItemSlotStatsModifyStatusDef.ItemSlotModification
+                    {
+                        Type = ItemSlotStatsModifyStatusDef.StatType.Armour,
+                        ModificationType = StatModificationType.AddMax,
+                        Value = 10f,
+                        ShowsNotification = false,
+                        NotifyOnce = false
+                    },
+                    new ItemSlotStatsModifyStatusDef.ItemSlotModification
+                    {
+                        Type = ItemSlotStatsModifyStatusDef.StatType.Armour,
+                        ModificationType = StatModificationType.AddRestrictedToBounds,
+                        Value = 10f,
+                        ShowsNotification = true,
+                        NotifyOnce = true
+                    }
+                };
+
+                // Accuracy boost (+15%) using StatMultiplierStatusDef (clone of Trembling)
+                StatMultiplierStatusDef accBoost = Helper.CreateDefFromClone(
+                    DefCache.GetDef<StatMultiplierStatusDef>("Trembling_StatusDef"),
+                    "e61a57a9-ec78-4c7b-9c23-cc57b1b3b86b",
+                    "E_AccuracyModifier [Entrench_AbilityDef]");
+                accBoost.EffectName = "";
+                accBoost.ShowNotification = false;
+                accBoost.VisibleOnHealthbar = 0;
+                accBoost.VisibleOnStatusScreen = 0;
+                accBoost.Visuals = null;
+                if (accBoost.StatsMultipliers != null && accBoost.StatsMultipliers.Length > 0)
+                {
+                    accBoost.StatsMultipliers[0].StatName = "Accuracy";
+                    accBoost.StatsMultipliers[0].Multiplier = 1.15f;
+                }
+
+                // Container status to apply both armor and accuracy
+                AddAttackBoostStatusDef addBoost = Helper.CreateDefFromClone(
+                    DefCache.GetDef<AddAttackBoostStatusDef>("E_Status [QuickAim_AbilityDef]"),
+                    "5d9d6e0a-5d1e-4c2e-8b66-93d90e5b2a4f",
+                    "E_AddAttackBoostStatus [Entrench_AbilityDef]");
+                addBoost.DurationTurns = 1;
+                addBoost.ExpireOnEndOfTurn = true;
+                addBoost.ShowNotification = true;
+                addBoost.Visuals = Helper.CreateDefFromClone(
+                    entrench.ViewElementDef,
+                    "b7125b19-1e8b-4c44-8b40-5b7e3f9d0b98",
+                    "E_Visuals_AddAttackBoostStatus [Entrench_AbilityDef]");
+                addBoost.Visuals.DisplayName1.LocalizationKey = "PR_BC_ENTRENCH_STATUS";
+                addBoost.Visuals.Description.LocalizationKey = "PR_BC_ENTRENCH_STATUS_DESC";
+                addBoost.AdditionalStatusesToApply = new TacStatusDef[] { armorBuff, accBoost };
+
+                entrench.StatusDef = addBoost;
+                entrench.Active = true;
+                entrench.EndsTurn = false;
+                entrench.ActionPointCost = 0.5f;
+                entrench.WillPointCost = 2.0f;
+                entrench.DisablingStatuses = new StatusDef[0];
+                entrench.TraitsRequired = new string[] { "start", "ability", "move" };
+                entrench.TraitsToApply = new string[] { "ability" };
+                entrench.ShowNotificationOnUse = true;
+                entrench.StatusApplicationTrigger = StatusApplicationTrigger.ActivateAbility;
+                entrench.CharacterProgressionData.RequiredStrength = 0;
+                entrench.CharacterProgressionData.RequiredWill = 0;
+                entrench.CharacterProgressionData.RequiredSpeed = 0;
+                entrench.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_ENTRENCH";
+                entrench.ViewElementDef.Description.LocalizationKey = "PR_BC_ENTRENCH_DESC";
+                Sprite icon = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_HunkerDown_1-2.png");
+                entrench.ViewElementDef.LargeIcon = icon;
+                entrench.ViewElementDef.SmallIcon = icon;
+            }
+            catch (System.Exception e)
+            {
+                PRMLogger.Error(e);
+            }
+        }
+
+        // New Suppression ability: single-target enemy accuracy debuff for 1 turn
+        public static void Create_Suppression()
+        {
+            try
+            {
+                string skillName = "Suppression_AbilityDef";
+                DefCache DefCache = TFTVMain.Main.DefCache;
+
+                ApplyStatusAbilityDef source = DefCache.GetDef<ApplyStatusAbilityDef>("InducePanic_AbilityDef");
+
+                ApplyStatusAbilityDef suppression = Helper.CreateDefFromClone(
+                    source,
+                    "4d7f0f6a-16d2-4c8a-9f8a-0fca7aa7c6f0",
+                    skillName);
+                suppression.CharacterProgressionData = Helper.CreateDefFromClone(
+                    source.CharacterProgressionData,
+                    "e3063a14-0b7f-4c0e-8d82-4a8d3ee6f5a1",
+                    skillName);
+                suppression.TargetingDataDef = Helper.CreateDefFromClone(
+                    source.TargetingDataDef,
+                    "1b1f6c6c-5c7b-4f5d-8c1f-bf1b3cf8f0a1",
+                    skillName);
+                suppression.ViewElementDef = Helper.CreateDefFromClone(
+                    source.ViewElementDef,
+                    "a0a2a7a9-6a84-4d37-8c39-1872f41c4d5f",
+                    skillName);
+
+                // Debuff: Accuracy x0.75 for 1 turn
+                StatMultiplierStatusDef accDebuff = Helper.CreateDefFromClone(
+                    DefCache.GetDef<StatMultiplierStatusDef>("Trembling_StatusDef"),
+                    "3ac8a5a1-6cc5-4a0b-b3b8-0e6a27f3f4a7",
+                    "E_AccuracyDebuff [Suppression_AbilityDef]");
+                accDebuff.EffectName = "";
+                accDebuff.ShowNotification = true;
+                accDebuff.VisibleOnHealthbar = 1;
+                accDebuff.VisibleOnStatusScreen = 1;
+                accDebuff.Visuals = Helper.CreateDefFromClone(
+                    suppression.ViewElementDef,
+                    "bc8b3cbd-1f69-4d3f-8f2b-9a4a12a1f6a2",
+                    "E_View [E_AccuracyDebuff [Suppression_AbilityDef]]");
+                accDebuff.Visuals.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSION_STATUS";
+                accDebuff.Visuals.Description.LocalizationKey = "PR_BC_SUPPRESSION_STATUS_DESC";
+                if (accDebuff.StatsMultipliers != null && accDebuff.StatsMultipliers.Length > 0)
+                {
+                    accDebuff.StatsMultipliers[0].StatName = "Accuracy";
+                    accDebuff.StatsMultipliers[0].Multiplier = 0.75f;
+                }
+                // Container to control duration/expiry
+                AddAttackBoostStatusDef supContainer = Helper.CreateDefFromClone(
+                    DefCache.GetDef<AddAttackBoostStatusDef>("E_Status [QuickAim_AbilityDef]"),
+                    "b7e47d13-13b2-4c5a-9f96-0f2d4d6c6928",
+                    "E_AddAttackBoostStatus [Suppression_AbilityDef]");
+                supContainer.DurationTurns = 1;
+                supContainer.ExpireOnEndOfTurn = true;
+                supContainer.ShowNotification = true;
+                supContainer.Visuals = Helper.CreateDefFromClone(
+                    suppression.ViewElementDef,
+                    "a4a2a7b1-8b64-4b21-8ebb-8b75ab1b3e2f",
+                    "E_Visuals_AddAttackBoostStatus [Suppression_AbilityDef]");
+                supContainer.Visuals.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSION";
+                supContainer.Visuals.Description.LocalizationKey = "PR_BC_SUPPRESSION_DESC";
+                supContainer.AdditionalStatusesToApply = new TacStatusDef[] { accDebuff };
+
+                suppression.StatusDef = supContainer;
+                suppression.WillPointCost = 2.0f;
+                suppression.ActionPointCost = 0.5f;
+                suppression.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSION";
+                suppression.ViewElementDef.Description.LocalizationKey = "PR_BC_SUPPRESSION_DESC";
+                Sprite icon2 = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_PersonalTrack_TacticalAnalyst.png");
+                suppression.ViewElementDef.LargeIcon = icon2;
+                suppression.ViewElementDef.SmallIcon = icon2;
+
+                // Slightly extend range compared to base panic
+                suppression.TargetingDataDef.Origin.Range = 12f;
+            }
+            catch (System.Exception e)
+            {
+                PRMLogger.Error(e);
+            }
+        }
+
+        // New Veil of Shadows: AoE ally stealth boost (stealth stat) for 1 turn
+        public static void Create_VeilOfShadows()
+        {
+            try
+            {
+                string skillName = "VeilOfShadows_AbilityDef";
+                DefCache DefCache = TFTVMain.Main.DefCache;
+
+                // Shell from MasterMarksman to avoid hidden special logic
+                ApplyStatusAbilityDef master = DefCache.GetDef<ApplyStatusAbilityDef>("MasterMarksman_AbilityDef");
+                ApplyStatusAbilityDef frenzy = DefCache.GetDef<ApplyStatusAbilityDef>("Priest_InstilFrenzy_AbilityDef");
+
+                ApplyStatusAbilityDef veil = Helper.CreateDefFromClone(
+                    master,
+                    "8b2a8e7a-6d61-4e34-a3cf-16d64b8b8301",
+                    skillName);
+                veil.CharacterProgressionData = Helper.CreateDefFromClone(
+                    master.CharacterProgressionData,
+                    "5bfb805e-9e23-4f90-8d58-0e0e9f3a4f50",
+                    skillName);
+                veil.TargetingDataDef = Helper.CreateDefFromClone(
+                    frenzy.TargetingDataDef,
+                    "e0ce2d5e-8e2f-4c58-8f0e-2a7d5a7142a6",
+                    skillName);
+                veil.ViewElementDef = Helper.CreateDefFromClone(
+                    master.ViewElementDef,
+                    "2d9c6859-15a3-4fa9-9f3a-02e0ab13d2c1",
+                    skillName);
+
+                StanceStatusDef stealthBoost = Helper.CreateDefFromClone(
+                    DefCache.GetDef<StanceStatusDef>("E_SneakAttackStatus [SneakAttack_AbilityDef]"),
+                    "5a354a7e-0b7f-4c8f-b017-b8a8bbef5d8b",
+                    "E_StealthBoost [VeilOfShadows_AbilityDef]");
+                stealthBoost.Visuals = Helper.CreateDefFromClone(
+                    veil.ViewElementDef,
+                    "b5a6dc21-2c4b-4d1b-9120-0a1a1c3f1962",
+                    "E_View [E_StealthBoost [VeilOfShadows_AbilityDef]]");
+                stealthBoost.Visuals.DisplayName1.LocalizationKey = "PR_BC_VEIL_OF_SHADOWS_STATUS";
+                stealthBoost.Visuals.Description.LocalizationKey = "PR_BC_VEIL_OF_SHADOWS_STATUS_DESC";
+                stealthBoost.DurationTurns = 1;
+                stealthBoost.SingleInstance = true;
+                stealthBoost.StatModifications = new ItemStatModification[]
+                {
+                    new ItemStatModification
+                    {
+                        TargetStat = StatModificationTarget.Stealth,
+                        Modification = StatModificationType.Add,
+                        Value = 0.4f
+                    }
+                };
+
+                veil.StatusDef = stealthBoost;
+                veil.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_VEIL_OF_SHADOWS";
+                veil.ViewElementDef.Description.LocalizationKey = "PR_BC_VEIL_OF_SHADOWS_DESC";
+                Sprite icon3 = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_SneakerLegs_Stealth-2.png");
+                veil.ViewElementDef.LargeIcon = icon3;
+                veil.ViewElementDef.SmallIcon = icon3;
+                veil.ActionPointCost = 0.5f;
+                veil.WillPointCost = 3.0f;
+                // Range similar to frenzy
+                veil.TargetingDataDef.Origin.Range = frenzy.TargetingDataDef.Origin.Range;
+            }
+            catch (System.Exception e)
+            {
+                PRMLogger.Error(e);
+            }
         }
 
     }

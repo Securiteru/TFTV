@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using PhoenixPoint.Geoscape.Core;
 using PhoenixPoint.Geoscape.Levels;
 using PhoenixPoint.Tactical.Entities;
@@ -122,7 +122,7 @@ namespace PRMBetterClasses
                                         // Set SP cost to personal ability. Be careful, SP cost are global per ability, regardless where this ability is set!
                                         tacticalAbilityDef.CharacterProgressionData.SkillPointCost = spCost;
                                         __result.Progression.PersonalAbilities[i] = tacticalAbilityDef;
-                                        //exclusionList.Add(ability);
+                                        exclusionList.Add(ability);
                                     }
                                     else
                                     {
