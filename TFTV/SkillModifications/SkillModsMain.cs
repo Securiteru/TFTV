@@ -90,10 +90,132 @@ namespace PRMBetterClasses.SkillModifications
                 Create_VeilOfShadows();
                 Create_ExtendedWatch();
                 Create_SuppressiveBarrage();
+                Create_SuppressiveOverwatch();
+                Create_DrumMagazine();
 
                 // Set SP for all skills according to where they are set
                 Set_SPcost();
             }
+
+        // Heavy: Suppressive Overwatch (multi-trigger during enemy turn, dmg x0.33, pin on hit)
+        public static void Create_SuppressiveOverwatch()
+        {
+            try
+            {
+                string skillName = "SuppressiveOverwatch_AbilityDef";
+                var defCache = TFTVMain.Main.DefCache;
+
+                // Base self-target apply ability
+                ApplyStatusAbilityDef baseSelf = defCache.GetDef<ApplyStatusAbilityDef>("QuickAim_AbilityDef");
+                ApplyStatusAbilityDef supOW = Helper.CreateDefFromClone(
+                    baseSelf,
+                    "7b8f5a2e-0e0d-4b4f-8a5a-0d3f4a1b2c11",
+                    skillName);
+                supOW.CharacterProgressionData = Helper.CreateDefFromClone(
+                    baseSelf.CharacterProgressionData,
+                    "c7f7a9a1-0e2b-4d1b-a0a3-71f8b3dc9a77",
+                    skillName);
+                supOW.ViewElementDef = Helper.CreateDefFromClone(
+                    baseSelf.ViewElementDef,
+                    "d1b1a2f3-2d3e-42e7-9a73-9c7a8b2c1e33",
+                    skillName);
+
+                // Stance status that reduces damage and serves as a marker
+                DamageMultiplierStatusDef dmgMult = Helper.CreateDefFromClone(
+                    defCache.GetDef<DamageMultiplierStatusDef>("E_Status [RageBurstAbilityDef]"),
+                    "2f7e2db0-2d5e-4c8f-9a9b-1c4b7f2a33d9",
+                    $"E_DamageMult_SuppressiveOW [{skillName}]");
+                dmgMult.Visuals = Helper.CreateDefFromClone(
+                    supOW.ViewElementDef,
+                    "b7b91a7d-78a7-4b5e-8c51-0f53c622e3e0",
+                    $"E_View [E_DamageMult_SuppressiveOW [{skillName}]]");
+                dmgMult.Visuals.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSIVE_OW_STATUS";
+                dmgMult.Visuals.Description.LocalizationKey = "PR_BC_SUPPRESSIVE_OW_STATUS_DESC";
+                dmgMult.Multiplier = 0.33f; // reduce damage to a third
+                dmgMult.DurationTurns = 1;
+                dmgMult.ExpireOnEndOfTurn = true;
+                dmgMult.SingleInstance = true;
+
+                // Marker status to detect in OW re-arm patch
+                TacStatusDef marker = Helper.CreateDefFromClone<TacStatusDef>(
+                    null,
+                    "8d6bc1b0-7c0b-4f77-9c67-8f4ccf0b2a61",
+                    "SuppressiveOW_Active_Marker_StatusDef");
+                marker.EffectName = marker.name;
+                marker.DurationTurns = 1;
+                marker.ExpireOnEndOfTurn = true;
+                marker.Visuals = dmgMult.Visuals;
+
+                // Multi-status: apply both marker and damage multiplier
+                MultiStatusDef multi = Helper.CreateDefFromClone(
+                    defCache.GetDef<MultiStatusDef>("E_Status [FastUse_AbilityDef]"),
+                    "f22c2bcd-1a4c-462e-8b85-66ed4d1a6138",
+                    $"E_MultiStatuses [{skillName}]");
+                multi.Statuses = new StatusDef[] { dmgMult, marker };
+
+                supOW.StatusDef = multi;
+                supOW.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_SUPPRESSIVE_OVERWATCH";
+                supOW.ViewElementDef.Description.LocalizationKey = "PR_BC_SUPPRESSIVE_OVERWATCH_DESC";
+                Sprite icon = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_PersonalTrack_TacticalAnalyst.png");
+                supOW.ViewElementDef.LargeIcon = icon;
+                supOW.ViewElementDef.SmallIcon = icon;
+                supOW.ActionPointCost = 0.5f;
+                supOW.WillPointCost = 2.0f;
+
+                // TODO: Harmony patch will detect this marker and re-arm OW after OW shots during enemy turn.
+                // TODO: On OW hit, apply the pinned debuff from Suppressive Barrage if present.
+            }
+            catch (System.Exception e)
+            {
+                PRMLogger.Error(e);
+            }
+        }
+
+        // Heavy: Drum Magazine (−2 Speed, increase heavy weapon clip to 10) — passive shell
+        public static void Create_DrumMagazine()
+        {
+            try
+            {
+                string skillName = "DrumMagazine_AbilityDef";
+                var defCache = TFTVMain.Main.DefCache;
+
+                PassiveModifierAbilityDef basePassive = defCache.GetDef<PassiveModifierAbilityDef>("EagleEyed_AbilityDef");
+                PassiveModifierAbilityDef drum = Helper.CreateDefFromClone(
+                    basePassive,
+                    "ae86d3f8-3d0f-4a3a-9f7c-6b7b3c2a9e70",
+                    skillName);
+                drum.CharacterProgressionData = Helper.CreateDefFromClone(
+                    basePassive.CharacterProgressionData,
+                    "abf2f0e1-8832-4df1-9a45-5b0d9a4d6b9d",
+                    skillName);
+                drum.ViewElementDef = Helper.CreateDefFromClone(
+                    basePassive.ViewElementDef,
+                    "b2d7a25e-9b3e-4c4e-9d9a-3a7d9f2c6e5b",
+                    skillName);
+
+                drum.StatModifications = new ItemStatModification[]
+                {
+                    new ItemStatModification
+                    {
+                        TargetStat = StatModificationTarget.Speed,
+                        Modification = StatModificationType.Add,
+                        Value = -2f
+                    }
+                };
+                drum.ViewElementDef.DisplayName1.LocalizationKey = "PR_BC_DRUM_MAGAZINE";
+                drum.ViewElementDef.Description.LocalizationKey = "PR_BC_DRUM_MAGAZINE_DESC";
+                Sprite icon = Helper.CreateSpriteFromImageFile("UI_AbilitiesIcon_Armor_Packs.png");
+                drum.ViewElementDef.LargeIcon = icon;
+                drum.ViewElementDef.SmallIcon = icon;
+
+                // NOTE: Per-actor ammo bump to 10 for heavy-tag weapons will be handled by a small runtime hook
+                // on mission start and on equipment change, adjusting Weapon instances (not global defs).
+            }
+            catch (System.Exception e)
+            {
+                PRMLogger.Error(e);
+            }
+        }
 
         // Extended Watch: Overwatch costs 0 AP for 1 turn; helps chaining OW across rounds
         public static void Create_ExtendedWatch()

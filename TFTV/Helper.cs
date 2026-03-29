@@ -68,6 +68,14 @@ namespace PRMBetterClasses
                     {
                         AbilityNameToDefMap["VEIL OF SHADOWS"] = "VeilOfShadows_AbilityDef";
                     }
+                    if (!AbilityNameToDefMap.ContainsKey("SUPPRESSIVE OVERWATCH"))
+                    {
+                        AbilityNameToDefMap["SUPPRESSIVE OVERWATCH"] = "SuppressiveOverwatch_AbilityDef";
+                    }
+                    if (!AbilityNameToDefMap.ContainsKey("DRUM MAGAZINE"))
+                    {
+                        AbilityNameToDefMap["DRUM MAGAZINE"] = "DrumMagazine_AbilityDef";
+                    }
                 }
             }
             catch (Exception e)

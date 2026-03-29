@@ -161,7 +161,7 @@ namespace PRMBetterClasses
                 perkDict: new Dictionary<string, Dictionary<string, List<string>>>
                 {{ FactionKeys.All, new Dictionary<string, List<string>> {
                     { ClassKeys.Assault.Name, new List<string> { "QUARTERBACK", "KILL'N'RUN" } },
-                    { ClassKeys.Heavy.Name, new List<string> { "JETPACK CONTROL", "HUNKER DOWN", "SHRED RESISTANCE", "ENTRENCH" } },
+                    { ClassKeys.Heavy.Name, new List<string> { "JETPACK CONTROL", "HUNKER DOWN", "SHRED RESISTANCE", "ENTRENCH", "DRUM MAGAZINE" } },
                     { ClassKeys.Sniper.Name, new List<string> { "GUNSLINGER", "KILL ZONE" } },
                     { ClassKeys.Berserker.Name, new List<string> { "GUN KATA", "EXERTION", "KILLER INSTINCT" } },
                     { ClassKeys.Priest.Name, new List<string> { "BIOCHEMIST", "LAY WASTE" } },
@@ -175,7 +175,7 @@ namespace PRMBetterClasses
                 perkDict: new Dictionary<string, Dictionary<string, List<string>>>
                 {{ FactionKeys.All, new Dictionary<string, List<string>> {
                     { ClassKeys.Assault.Name, new List<string> { "AIMED BURST", "KILL'N'RUN", "SUPPRESSION" } },
-                    { ClassKeys.Heavy.Name, new List<string> { "BOOM BLAST", "SKIRMISHER", "HUNKER DOWN", "ENTRENCH" } },
+                    { ClassKeys.Heavy.Name, new List<string> { "BOOM BLAST", "SKIRMISHER", "HUNKER DOWN", "ENTRENCH", "SUPPRESSIVE OVERWATCH" } },
                     { ClassKeys.Sniper.Name, new List<string> { "KILL ZONE", "GUNSLINGER" } },
                     { ClassKeys.Berserker.Name, new List<string> { "KILLER INSTINCT", "GUN KATA" } },
                     { ClassKeys.Priest.Name, new List<string> { "LAY WASTE", "BIOCHEMIST" } },
